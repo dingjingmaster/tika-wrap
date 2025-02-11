@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
   distributed with this work for additional information
@@ -17,114 +15,110 @@
   KIND, either express or implied.  See the License for the
   specific language governing permissions and limitations
   under the License.
--->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.apache.tika</groupId>
-    	<artifactId>tika-parent</artifactId>
-    	<version>3.1.0</version>
-    	<relativePath>tika-parent/pom.xml</relativePath>
-  	</parent>
-
-	<artifactId>tika</artifactId>
-  	<packaging>pom</packaging>
-  	<name>Apache Tika</name>
-  	<url>https://tika.apache.org</url>
-
-  	<modules>
-    	<module>tika-parent</module>
-    	<module>tika-bom</module>
-    	<module>tika-core</module>
-    	<module>tika-serialization</module>
-    	<module>tika-detectors</module>
-    	<module>tika-parsers</module>
-    	<module>tika-bundles</module>
-    	<module>tika-xmp</module>
-    	<module>tika-batch</module>
-    	<module>tika-langdetect</module>
-    	<module>tika-pipes</module>
-    	<module>tika-grpc</module>
-    	<module>tika-app</module>
-    	<module>tika-server</module>
-    	<module>tika-integration-tests</module>
-    	<module>tika-eval</module>
-    	<module>tika-fuzzing</module>
-    	<module>tika-translate</module>
-    	<module>tika-example</module>
-    	<module>tika-java7</module>
-    	<module>tika-handlers</module>
-	</modules>
-
-	<profiles>
-    	<profile>
-      		<id>apache-release</id>
-      		<properties>
-        		<username>${user.name}</username>
-      		</properties>
-      		<build>
-        		<plugins>
-          			<plugin>
-            			<artifactId>maven-assembly-plugin</artifactId>
-            			<executions>
-              				<execution>
-                				<id>src</id>
-                				<goals>
-                  					<goal>single</goal>
-                				</goals>
-                				<phase>package</phase>
-                				<configuration>
-                  					<descriptors>
-                    					<descriptor>assembly.xml</descriptor>
-                  					</descriptors>
-                				</configuration>
-              				</execution>
-              				<execution>
-                				<id>source-release-assembly</id>
-                				<configuration>
-                  					<skipAssembly>true</skipAssembly>
-                				</configuration>
-              				</execution>
-            			</executions>
-          			</plugin>
-          		<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-            		<artifactId>maven-antrun-plugin</artifactId>
-            		<version>${maven.antrun.version}</version>
-            		<executions>
-              			<execution>
-                			<goals>
-                  				<goal>run</goal>
-                			</goals>
-                			<phase>deploy</phase>
-                			<configuration>
-                  				<target>
-                    				<mkdir dir="${basedir}/target/${project.version}" />
-                    				<copy todir="${basedir}/target/${project.version}" flatten="true">
-                      					<fileset dir="${basedir}">
-                        					<include name="CHANGES.txt" />
-                        					<include name="target/*-src.zip*" />
-                        					<include name="tika-parsers/tika-parsers-extended/tika-parser-scientific-package/target/tika-parser-scientific-package-${project.version}.jar*" />
-                        					<include name="tika-parsers/tika-parsers-extended/tika-parser-sqlite3-package/target/tika-parser-sqlite3-package-${project.version}.jar*" />
-                        					<include name="tika-parsers/tika-parsers-ml/tika-parser-nlp-package/target/tika-parser-nlp-package-${project.version}.jar*" />
-                        					<include name="tika-app/target/tika-app-${project.version}.jar*" />
-                        					<include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}.jar*" />
-                        					<include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}-bin.tgz*" />
-                        					<include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}-bin.zip*" />
-                        					<include name="tika-eval/tika-eval-app/target/tika-eval-app-${project.version}.jar*" />
-                      					</fileset>
-                    				</copy>
-                    				<checksum algorithm="SHA-512" fileext=".sha512">
-                      					<fileset dir="${basedir}/target/${project.version}">
-                        					<include name="*.tgz" />
-                        					<include name="*.zip" />
-                        					<include name="*.?ar" />
-                      					</fileset>
-                    				</checksum>
-                    				<checksum file="${basedir}/target/${project.version}/tika-${project.version}-src.zip" algorithm="SHA-512" property="checksum" />
-									<!-- this spacing is less than ideal, but if you indent here, the vote.txt file will have the leading spaces -->
-									<echo file="${basedir}/target/vote.txt">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika-parent</artifactId>
+    <version>3.1.0</version>
+    <relativePath>tika-parent/pom.xml</relativePath>
+  </parent>
+  <artifactId>tika</artifactId>
+  <packaging>pom</packaging>
+  <name>Apache Tika</name>
+  <url>https://tika.apache.org</url>
+  <modules>
+    <module>tika-parent</module>
+    <module>tika-bom</module>
+    <module>tika-core</module>
+    <module>tika-serialization</module>
+    <module>tika-detectors</module>
+    <module>tika-parsers</module>
+    <module>tika-bundles</module>
+    <module>tika-xmp</module>
+    <module>tika-batch</module>
+    <module>tika-langdetect</module>
+    <module>tika-pipes</module>
+    <module>tika-grpc</module>
+    <module>tika-app</module>
+    <module>tika-server</module>
+    <module>tika-integration-tests</module>
+    <module>tika-eval</module>
+    <module>tika-fuzzing</module>
+    <module>tika-translate</module>
+    <module>tika-example</module>
+    <module>tika-java7</module>
+    <module>tika-handlers</module>
+    <module>tika-main</module>
+  </modules>
+  <profiles>
+    <profile>
+      <id>apache-release</id>
+      <properties>
+        <username>${user.name}</username>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>src</id>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <descriptors>
+                    <descriptor>assembly.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+              <execution>
+                <id>source-release-assembly</id>
+                <configuration>
+                  <skipAssembly>true</skipAssembly>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>${maven.antrun.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>deploy</phase>
+                <configuration>
+                  <target>
+                    <mkdir dir="${basedir}/target/${project.version}"/>
+                    <copy flatten="true" todir="${basedir}/target/${project.version}">
+                      <fileset dir="${basedir}">
+                        <include name="CHANGES.txt"/>
+                        <include name="target/*-src.zip*"/>
+                        <include name="tika-parsers/tika-parsers-extended/tika-parser-scientific-package/target/tika-parser-scientific-package-${project.version}.jar*"/>
+                        <include name="tika-parsers/tika-parsers-extended/tika-parser-sqlite3-package/target/tika-parser-sqlite3-package-${project.version}.jar*"/>
+                        <include name="tika-parsers/tika-parsers-ml/tika-parser-nlp-package/target/tika-parser-nlp-package-${project.version}.jar*"/>
+                        <include name="tika-app/target/tika-app-${project.version}.jar*"/>
+                        <include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}.jar*"/>
+                        <include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}-bin.tgz*"/>
+                        <include name="tika-server/tika-server-standard/target/tika-server-standard-${project.version}-bin.zip*"/>
+                        <include name="tika-eval/tika-eval-app/target/tika-eval-app-${project.version}.jar*"/>
+                      </fileset>
+                    </copy>
+                    <checksum algorithm="SHA-512" fileext=".sha512">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.tgz"/>
+                        <include name="*.zip"/>
+                        <include name="*.?ar"/>
+                      </fileset>
+                    </checksum>
+                    <checksum algorithm="SHA-512" file="${basedir}/target/${project.version}/tika-${project.version}-src.zip" property="checksum"/>
+                    <!-- this spacing is less than ideal, but if you indent here, the vote.txt file will have the leading spaces -->
+                    <echo file="${basedir}/target/vote.txt">
 										From: ${username}@apache.org
 										To: dev@tika.apache.org user@tika.apache.org
 										Subject: [VOTE] Release Apache Tika ${project.version} Candidate #N
@@ -146,8 +140,8 @@
 										[ ] +1 Release this package as Apache Tika ${project.version}
 										[ ] -1 Do not release this package because...${line.separator}
                     				</echo>
-									<echo />
-									<echo>
+                    <echo/>
+                    <echo>
 										The release candidate has been prepared in:
 											${basedir}/target/${project.version}
 
@@ -157,85 +151,80 @@
 										A release vote template has been generated for you:
 											file://${basedir}/target/vote.txt
 									</echo>
-									<echo />
-								</target>
-							</configuration>
-						</execution>
-					</executions>
-					<dependencies>
-						<dependency>
-							<groupId>org.apache.ant</groupId>
-							<artifactId>ant-nodeps</artifactId>
-							<version>1.8.1</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-			</plugins>
-		</build>
-	</profile>
-</profiles>
-
-<build>
-	<plugins>
-		<plugin>
-			<groupId>org.apache.rat</groupId>
-			<artifactId>apache-rat-plugin</artifactId>
-			<version>${rat.version}</version>
-			<configuration>
-				<excludes>
-					<exclude>CHANGES.txt</exclude>
-					<exclude>README.md</exclude>
-					<!-- remove this once we figure out the bundle packaging -->
-					<exclude>tika-bundle/src/main/resources/META-INF/MANIFEST.MF</exclude>
-					<exclude>.gitattributes</exclude>
-				</excludes>
-			</configuration>
-		</plugin>
-	</plugins>
-</build>
-
-<description>The Apache Tika™ toolkit detects and extracts metadata and structured text content from various documents using existing parser libraries.</description>
-<organization>
-	<name>The Apache Software Foundation</name>
+                    <echo/>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant-nodeps</artifactId>
+                <version>1.8.1</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>${rat.version}</version>
+        <configuration>
+          <excludes>
+            <exclude>CHANGES.txt</exclude>
+            <exclude>README.md</exclude>
+            <!-- remove this once we figure out the bundle packaging -->
+            <exclude>tika-bundle/src/main/resources/META-INF/MANIFEST.MF</exclude>
+            <exclude>.gitattributes</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <description>The Apache Tika™ toolkit detects and extracts metadata and structured text content from various documents using existing parser libraries.</description>
+  <organization>
+    <name>The Apache Software Foundation</name>
     <url>https://www.apache.org</url>
-</organization>
-<issueManagement>
-	<system>JIRA</system>
+  </organization>
+  <issueManagement>
+    <system>JIRA</system>
     <url>https://issues.apache.org/jira/browse/TIKA</url>
-</issueManagement>
-<ciManagement>
-	<system>Jenkins</system>
+  </issueManagement>
+  <ciManagement>
+    <system>Jenkins</system>
     <url>https://ci-builds.apache.org/job/Tika/job/tika-main-jdk8/</url>
-</ciManagement>
-
-<scm>
-	<tag>tika-3.1.0-rc1</tag>
-</scm>
-
-<!-- 配置阿里云仓库 -->
-<repositories>
+  </ciManagement>
+  <scm>
+    <tag>tika-3.1.0-rc1</tag>
+  </scm>
+  <!-- 配置阿里云仓库 -->
+  <repositories>
     <repository>
-        <id>aliyun-repos</id>
-        <url>https://maven.aliyun.com/repository/public</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
+      <id>aliyun-repos</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
-</repositories>
-<pluginRepositories>
+  </repositories>
+  <pluginRepositories>
     <pluginRepository>
-        <id>aliyun-repos</id>
-        <url>https://maven.aliyun.com/repository/public</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
+      <id>aliyun-repos</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </pluginRepository>
-</pluginRepositories>
-
+  </pluginRepositories>
 </project>
