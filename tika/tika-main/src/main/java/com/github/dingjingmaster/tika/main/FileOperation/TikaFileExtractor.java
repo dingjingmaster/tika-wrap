@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +21,7 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.pkg.ContextExtraInfo;
+//import org.apache.tika.parser.pkg.ContextExtraInfo;
 
 public class TikaFileExtractor {
    HashMap<String, Metadata> fileList = new HashMap<>();
@@ -204,14 +205,14 @@ public class TikaFileExtractor {
       InputStream stream = null;
 
       try {
-         if (innerFileDir != null && innerFileDir.length() > 0) {
+         if (innerFileDir != null && !innerFileDir.isEmpty()) {
             this.setTmpPath(innerFileDir);
          }
 
          this.parser.setTmpFilePath(this.tmpFilePath);
          this.parser.setFileName(fileName);
          if (data != null && !data.isEmpty()) {
-            stream = new ByteArrayInputStream(data.getBytes("ISO-8859-1"));
+            stream = new ByteArrayInputStream(data.getBytes(StandardCharsets.ISO_8859_1));
          } else {
             stream = TikaInputStream.get(new File(fileName));
          }
@@ -219,9 +220,9 @@ public class TikaFileExtractor {
          Metadata metadata = new Metadata();
          metadata.set("resourceName", fileName);
          ParseContext context = new ParseContext();
-         ContextExtraInfo extraInfo = new ContextExtraInfo();
-         extraInfo.setFileNameEncoding(this.fileNameEncoding);
-         context.set(ContextExtraInfo.class, extraInfo);
+//         ContextExtraInfo extraInfo = new ContextExtraInfo();
+//         extraInfo.setFileNameEncoding(this.fileNameEncoding);
+//         context.set(ContextExtraInfo.class, extraInfo);
          this.parser.parse(stream, null, metadata, context);
          this.fileList = this.parser.getFileInfo();
       } catch (Exception var12) {

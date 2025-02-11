@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.compress.archivers.zip.UnsupportedZipFeatureException;
-import org.apache.pdfbox.exceptions.WrappedIOException;
+//import org.apache.pdfbox.exceptions.WrappedIOException;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
@@ -20,7 +20,7 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.pkg.ContextExtraInfo;
+//import org.apache.tika.parser.pkg.ContextExtraInfo;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.ContentHandler;
 
@@ -123,11 +123,11 @@ public class FullParser implements Parser {
                   if (msg.contains("encryption")) {
                      metadata.set(IS_ENCRYPTED, "yes");
                   }
-               } else if (WrappedIOException.class.isInstance(cause)) {
-                  String msg = cause.getMessage();
-                  if (msg.contains("decrypt")) {
-                     metadata.set(IS_ENCRYPTED, "yes");
-                  }
+//               } else if (WrappedIOException.class.isInstance(cause)) {
+//                  String msg = cause.getMessage();
+//                  if (msg.contains("decrypt")) {
+//                     metadata.set(IS_ENCRYPTED, "yes");
+//                  }
                }
             }
 
@@ -220,14 +220,14 @@ public class FullParser implements Parser {
 
          tmp = (TikaInputStream)stream;
          parser = new Rar5Parser(tmp);
-         String encoding = "";
-         ContextExtraInfo extraInfo = context.get(ContextExtraInfo.class);
-         if (extraInfo != null) {
-            encoding = extraInfo.getFileNameEncoding();
-            if (encoding != null && !encoding.isEmpty()) {
-               parser.setFileNameEncoding(encoding);
-            }
-         }
+//         String encoding = "";
+//         ContextExtraInfo extraInfo = context.get(ContextExtraInfo.class);
+//         if (extraInfo != null) {
+//            encoding = extraInfo.getFileNameEncoding();
+//            if (encoding != null && !encoding.isEmpty()) {
+//               parser.setFileNameEncoding(encoding);
+//            }
+//         }
 
          if (!parser.isEncrypted()) {
             while (parser.getNextEntry()) {
