@@ -12,7 +12,8 @@ clean:
 
 tika:
 	@echo 'build tika ...'
-	cd $(shell pwd)/tika/ && mvn package -DskipTests -pl tika-main -am
+	#cd $(shell pwd)/tika/ && mvn package -DskipTests 
+	cd $(shell pwd)/tika/ && mvn package -DskipTests -pl tika-main -am 
 
 tika_wrap:
 	@echo 'build tika-wrap ...'

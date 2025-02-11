@@ -214,6 +214,10 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>local-repos</id>
+      <url>file:///home/dingjing/.m2/repository</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
