@@ -14,11 +14,17 @@ class JavaEnvPrivate
 public:
     bool initJvm();
     void closeJvm();
+
+    ~JavaEnvPrivate();
     explicit JavaEnvPrivate(JavaEnv* q);
 
 private:
     JavaVM*                 mJvm = nullptr;
     JNIEnv*                 mJvmEnv = nullptr;
+
+    jobject                 mFullParserObj = nullptr;
+    jclass                  mFullParserClass = nullptr;
+
     JavaEnv*                q_ptr = nullptr;
 };
 
@@ -27,7 +33,7 @@ bool JavaEnvPrivate::initJvm()
     JavaVMInitArgs jvmArgs = {};
     JavaVMOption   jvmOptions = {};
 
-    jvmOptions.optionString = const_cast<char*>("-Djava.class.path=.:/data/code/tika-wrap/tmp-dir/tika-main-1.0.0.jar");
+    jvmOptions.optionString = const_cast<char*>("-Djava.class.path=.:./tika-main-1.0.0.jar");
     jvmArgs.version = JNI_VERSION_1_8;
     jvmArgs.nOptions = 1;
     jvmArgs.options = &jvmOptions;
@@ -35,12 +41,28 @@ bool JavaEnvPrivate::initJvm()
 
     if (JNI_OK != JNI_CreateJavaVM(&mJvm, reinterpret_cast<void**>(&mJvmEnv), &jvmArgs)) {
         qWarning() << "Create Java VM failed!";
+        closeJvm();
         return false;
     }
 
-    jclass fullParserClass = mJvmEnv->FindClass("com/github/dingjingmaster/tika/main/FileOperation/FullParser");
-    if (nullptr == fullParserClass) {
+    mFullParserClass = mJvmEnv->FindClass("com/github/dingjingmaster/tika/main/FileOperation/FullParser");
+    if (nullptr == mFullParserClass) {
         qWarning() << "Find class 'FullParser' failed!";
+        closeJvm();
+        return false;
+    }
+
+    jmethodID fullParser = mJvmEnv->GetMethodID(mFullParserClass, "<init>", "()V");
+    if (!fullParser) {
+        qWarning() << "Find method 'FullParser' failed!";
+        closeJvm();
+        return false;
+    }
+
+    mFullParserObj = mJvmEnv->NewObject(mFullParserClass, fullParser);
+    if (nullptr == mFullParserObj) {
+        qWarning() << "New object 'FullParser' failed!";
+        closeJvm();
         return false;
     }
 
@@ -52,7 +74,15 @@ void JavaEnvPrivate::closeJvm()
     if (mJvm) {
         mJvm->DestroyJavaVM();
         mJvm = nullptr;
+
+        mFullParserObj = nullptr;
+        mFullParserClass = nullptr;
     }
+}
+
+JavaEnvPrivate::~JavaEnvPrivate()
+{
+
 }
 
 JavaEnvPrivate::JavaEnvPrivate(JavaEnv * q)
