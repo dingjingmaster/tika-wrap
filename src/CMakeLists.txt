@@ -13,12 +13,14 @@ set(PROJECT_VERSION_PATCH 0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(JAVA_HOME "/opt/openjdk-bin-17")
 
 add_definitions(
         -w -g
         -D QT_NO_KEYWORDS
         -D QT_MESSAGELOGCONTEXT
 
+        -D JAVA_HOME=\\"${JAVA_HOME}\\"
         -D PACKAGE_NAME=\\"${PROJECT_NAME}\\"
         -D G_LOG_DOMAIN=\\"${PROJECT_NAME}\\"
         -D INSTALL_PATH=\\"/usr/local/andsec/\\"
@@ -26,9 +28,9 @@ add_definitions(
 
 find_package (PkgConfig)
 find_package(Qt5LinguistTools REQUIRED)
-find_package(Qt5 COMPONENTS Core Network REQUIRED)
+find_package(Qt5 COMPONENTS Core REQUIRED)
 
-pkg_check_modules(GIO REQUIRED gio-2.0)
+pkg_check_modules(QT5 REQUIRED Qt5Core)
 
 cmake_host_system_information(RESULT OS QUERY OS_NAME)
 cmake_host_system_information(RESULT RELEASE QUERY OS_RELEASE)
@@ -48,5 +50,15 @@ MESSAGE(STATUS "OS release      : '${RELEASE}'")
 MESSAGE(STATUS "Qt Version      : '${CUR_QT_VERSION}'")
 MESSAGE("")
 
+file(GLOB TIKA_WRAP_SRC
+        java-env.cpp java-env.h
+)
 
-add_executable(tika-wrap main.cpp)
+add_library(tika-wrap SHARED ${TIKA_WRAP_SRC})
+target_include_directories(tika-wrap PUBLIC ${QT5_INCLUDE_DIRS} ${JAVA_HOME}/include ${JAVA_HOME}/include/linux)
+target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
+
+add_executable(tika-wrap-demo main.cpp)
+target_include_directories(tika-wrap-demo PUBLIC ${QT5_INCLUDE_DIRS})
+target_link_libraries(tika-wrap-demo PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm tika-wrap)
+set_target_properties(tika-wrap-demo PROPERTIES LINK_FLAGS -Wl,-rpath=${JAVA_HOME}/lib/server)
