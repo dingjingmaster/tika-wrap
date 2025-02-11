@@ -57,6 +57,7 @@ file(GLOB TIKA_WRAP_SRC
 add_library(tika-wrap SHARED ${TIKA_WRAP_SRC})
 target_include_directories(tika-wrap PUBLIC ${QT5_INCLUDE_DIRS} ${JAVA_HOME}/include ${JAVA_HOME}/include/linux)
 target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
+target_compile_options(tika-wrap PUBLIC -fPIC)
 
 add_executable(tika-wrap-demo main.cpp)
 target_include_directories(tika-wrap-demo PUBLIC ${QT5_INCLUDE_DIRS})
