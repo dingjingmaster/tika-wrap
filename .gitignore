@@ -1,4 +1,8 @@
 .idea/
+build/
 target/
-*.bin
+tmp-dir/
 cmake-build-*/
+
+*.so
+*.bin
