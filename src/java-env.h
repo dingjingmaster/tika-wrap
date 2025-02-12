@@ -14,6 +14,7 @@ class JavaEnv final : public QObject
     Q_DECLARE_PRIVATE(JavaEnv)
 public:
     static JavaEnv* getInstance();
+    bool parseFile(const QString& absFilePath, const QString& tmpDir);
 
 private:
     JavaEnv();
