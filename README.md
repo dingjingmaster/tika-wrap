@@ -19,3 +19,7 @@ make
 - sox
 - exiftool
 - tesseract
+
+## TODO
+
+- [ ] 递归解析煤层内容

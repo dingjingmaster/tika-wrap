@@ -48,7 +48,10 @@ public class AutoParser {
     }
 
     public static void main (String[] args) {
-        String file = "/home/dingjing/tk.csv";
+//        String file = "/home/dingjing/tk.csv";
+//        String file = "/home/dingjing/andsec_3.2.14_amd64.deb";
+//        String file = "/home/dingjing/TrayApp.zip";
+        String file = "/home/dingjing/aa.zip";
         AutoParser ap = new AutoParser();
 
         try {
