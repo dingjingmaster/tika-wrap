@@ -40,7 +40,7 @@ public class AutoParser {
             System.out.println("File content: " + bh);
             String[] names = md.names();
             for (String name: names) {
-                System.out.println(name);
+                System.out.println(name + " ==> " + md.get(name));
             }
         }
 
@@ -51,7 +51,8 @@ public class AutoParser {
 //        String file = "/home/dingjing/tk.csv";
 //        String file = "/home/dingjing/andsec_3.2.14_amd64.deb";
 //        String file = "/home/dingjing/TrayApp.zip";
-        String file = "/home/dingjing/aa.zip";
+//        String file = "/home/dingjing/aa.zip";
+        String file = "/home/dingjing/Pictures/vim.png";
         AutoParser ap = new AutoParser();
 
         try {
