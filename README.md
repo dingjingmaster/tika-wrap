@@ -13,3 +13,9 @@ make
 - make
 - Qt 开发环境
 - gcc g++
+
+## 运行依赖
+
+- sox
+- exiftool
+- tesseract
