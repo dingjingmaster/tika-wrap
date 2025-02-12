@@ -11,24 +11,26 @@ int main (int argc, char* argv[])
 {
     // QCoreApplication app(argc, argv);
 
-    // JavaEnv::getInstance();
+    const char* files[] = {
+        "/home/dingjing/TrayApp.zip",
+        "/home/dingjing/aa.zip",
+        "/home/dingjing/tk.csv",
+        nullptr
+    };
 
-    QTemporaryDir tempDir;
-    tempDir.setAutoRemove(false);
-    // QString filePath = "/home/dingjing/TrayApp.zip";
-    // QString filePath = "/home/dingjing/aa.zip";
-    QString filePath = "/home/dingjing/tk.csv";
-    QString tmpDir = tempDir.path();
+    for (int i = 0; files[i]; i++) {
+        QTemporaryDir tempDir;
+        // tempDir.setAutoRemove(false);
+        QString tmpDir = tempDir.path();
 
-    qInfo() << tmpDir;
+        if (!JavaEnv::getInstance()->parseFile(files[i], tmpDir)) {
+            qWarning() << files[i] << " 文件解析失败!";
+        }
 
-    if (!JavaEnv::getInstance()->parseFile(filePath, tmpDir)) {
-        qWarning() << "文件解析失败!";
-    }
-
-    QFile file(QString("%1/ctx.txt").arg(tmpDir));
-    if (file.open(QIODevice::ReadOnly)) {
-        qInfo() << "File content:\n" << file.readAll();
+        QFile file(QString("%1/ctx.txt").arg(tmpDir));
+        if (file.open(QIODevice::ReadOnly)) {
+            qInfo() << "File content:\n" << file.readAll();
+        }
     }
 
     return 0;
