@@ -9,28 +9,33 @@
 
 int main (int argc, char* argv[])
 {
-    // QCoreApplication app(argc, argv);
-
-    const char* files[] = {
-        "/home/dingjing/TrayApp.zip",
-        "/home/dingjing/aa.zip",
-        "/home/dingjing/tk.csv",
-        nullptr
-    };
-
-    for (int i = 0; files[i]; i++) {
+    auto printFileContent = [&] (const char* filePath) -> void {
         QTemporaryDir tempDir;
-        // tempDir.setAutoRemove(false);
         QString tmpDir = tempDir.path();
 
-        if (!JavaEnv::getInstance()->parseFile(files[i], tmpDir)) {
-            qWarning() << files[i] << " 文件解析失败!";
+        if (!JavaEnv::getInstance()->parseFile(filePath, tmpDir)) {
+            qWarning() << filePath << " 文件解析失败!";
         }
 
         QFile file(QString("%1/ctx.txt").arg(tmpDir));
         if (file.open(QIODevice::ReadOnly)) {
             qInfo() << "File content:\n" << file.readAll();
         }
+    };
+
+    if (argc == 1) {
+        const char* files[] = {
+            "/home/dingjing/TrayApp.zip",
+            "/home/dingjing/aa.zip",
+            "/home/dingjing/tk.csv",
+            nullptr
+        };
+        for (int i = 0; files[i]; i++) {
+            printFileContent(files[i]);
+        }
+    }
+    else if (QFile::exists(argv[1])) {
+        printFileContent(argv[1]);
     }
 
     return 0;
