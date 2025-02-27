@@ -54,7 +54,7 @@ public class AutoParser {
             else {
                 BodyContentHandler memHandler = new BodyContentHandler(-1);
                 parser.parse(fi, memHandler, md, ctx);
-                System.out.println("File content: " + memHandler);
+//                System.out.println("File content: " + memHandler);
             }
 
             if (null != metaFile) {
