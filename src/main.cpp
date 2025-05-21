@@ -19,8 +19,22 @@ int main (int argc, char* argv[])
 
         QFile file(QString("%1/ctx.txt").arg(tmpDir));
         if (file.open(QIODevice::ReadOnly)) {
-            qInfo() << "File content:\n" << file.readAll();
+            qInfo() << "File content:\n" << QString(file.readAll());
         }
+        file.close();
+
+        QFile fileM(QString("%1/meta.txt").arg(tmpDir));
+        if (fileM.open(QIODevice::ReadOnly)) {
+            auto lines = QString(fileM.readAll()).split("\n");
+            for (auto& line : lines) {
+                auto arr = QString(line).split("{]");
+                if (arr.size() != 2) {
+                    continue;
+                }
+                qInfo() << arr.at(0) << ":" << arr.at(1);
+            }
+        }
+        fileM.close();
     };
 
     if (argc == 1) {
