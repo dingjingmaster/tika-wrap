@@ -13,7 +13,7 @@ int main (int argc, char* argv[])
         QTemporaryDir tempDir;
         QString tmpDir = tempDir.path();
 
-        if (!JavaEnv::getInstance()->parseFile(filePath, tmpDir)) {
+        if (!JavaEnv().parseFile(filePath, tmpDir)) {
             qWarning() << filePath << " 文件解析失败!";
         }
 

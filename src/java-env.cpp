@@ -173,12 +173,12 @@ JavaEnvPrivate::JavaEnvPrivate(JavaEnv * q)
 {
 }
 
-JavaEnv JavaEnv::gInstance;
+// JavaEnv JavaEnv::gInstance;
 
-JavaEnv* JavaEnv::getInstance()
-{
-    return &JavaEnv::gInstance;
-}
+// JavaEnv* JavaEnv::getInstance()
+// {
+    // return &JavaEnv::gInstance;
+// }
 
 bool JavaEnv::parseFile(const QString & absFilePath, const QString& tmpDir)
 {
