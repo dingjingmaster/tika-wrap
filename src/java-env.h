@@ -13,16 +13,16 @@ class JavaEnv final : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(JavaEnv)
 public:
-    JavaEnv();
-    // static JavaEnv* getInstance();
+    static JavaEnv* getInstance();
     bool parseFile(const QString& absFilePath, const QString& tmpDir);
 
 private:
+    JavaEnv();
     JavaEnv(const JavaEnv&);
     JavaEnv* operator=(const JavaEnv&) const;
 
 private:
-    // static JavaEnv              gInstance;
+    static JavaEnv              gInstance;
     JavaEnvPrivate*             d_ptr = nullptr;
 };
 

@@ -173,18 +173,22 @@ JavaEnvPrivate::JavaEnvPrivate(JavaEnv * q)
 {
 }
 
-// JavaEnv JavaEnv::gInstance;
+JavaEnv JavaEnv::gInstance;
 
-// JavaEnv* JavaEnv::getInstance()
-// {
-    // return &JavaEnv::gInstance;
-// }
+JavaEnv* JavaEnv::getInstance()
+{
+    return &JavaEnv::gInstance;
+}
 
 bool JavaEnv::parseFile(const QString & absFilePath, const QString& tmpDir)
 {
     Q_D(JavaEnv);
 
-    return d->autoParserParserFile(absFilePath, tmpDir);
+    d->mJvm->AttachCurrentThread(reinterpret_cast<void**>(&(d->mJvmEnv)), nullptr);
+    const bool ret = d->autoParserParserFile(absFilePath, tmpDir);
+    d->mJvm->DetachCurrentThread();
+
+    return ret;
 }
 
 JavaEnv::JavaEnv()
