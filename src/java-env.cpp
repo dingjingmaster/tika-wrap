@@ -48,7 +48,7 @@ bool JavaEnvPrivate::initJvm()
     JavaVMInitArgs jvmArgs = {};
     JavaVMOption   jvmOptions[4] = {};
 
-    jvmOptions[0].optionString = const_cast<char*>("-Djava.class.path=.:./tika-main-1.0.0.jar");
+    jvmOptions[0].optionString = const_cast<char*>("-Djava.class.path=.:" INSTALL_PATH "/lib/tika-main-1.0.0.jar");
     jvmOptions[1].optionString = const_cast<char*>("-Xms1G");
     jvmOptions[2].optionString = const_cast<char*>("-Xmx1G");
     jvmOptions[3].optionString = const_cast<char*>("-XX:PermSize=2G");
