@@ -13,7 +13,12 @@ set(PROJECT_VERSION_PATCH 0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(JAVA_HOME "/opt/openjdk-bin-21")
+
+if (EXISTS "/usr/lib/jvm/java-11-openjdk-amd64")
+    set(JAVA_HOME "/usr/lib/jvm/java-11-openjdk-amd64")
+else ()
+    set(JAVA_HOME "/opt/openjdk-bin-21")
+endif ()
 
 add_definitions(
         -w -g
