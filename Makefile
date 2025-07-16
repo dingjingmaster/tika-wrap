@@ -13,15 +13,15 @@ clean:
 tika:
 	@echo 'build tika ...'
 	#cd $(shell pwd)/tika/ && mvn package -DskipTests 
-	cd $(shell pwd)/tika/ && mvn package -Ddetail=true -DskipTests -pl tika-main -am 
-	cp $(shell pwd)/tika/tika-main/target/tika-main-1.0.0.jar $(shell pwd)/tmp-dir/
+	cd $(shell pwd)/tika/ && mvn package -Ddetail=true -DskipTests -am 
+	cp $(shell pwd)/tika/target/tika-main-1.0.0.jar $(shell pwd)/tmp-dir/
 
 tika_wrap:
 	@echo 'build tika-wrap ...'
-	cd $(shell pwd)/src/ && cmake -B build 
-	cd $(shell pwd)/src/ && make -C build
-	cp $(shell pwd)/src/build/tika-wrap-demo $(shell pwd)/tmp-dir/
-	cp $(shell pwd)/src/build/libtika-wrap.so $(shell pwd)/tmp-dir/
+	cmake -B build 
+	make -C build
+	cp $(shell pwd)/build/example/tika-wrap-demo $(shell pwd)/tmp-dir/
+	cp $(shell pwd)/build/libtika-wrap.so $(shell pwd)/tmp-dir/
 
 demo:
 	mkdir -p $(shell pwd)/tmp-dir/

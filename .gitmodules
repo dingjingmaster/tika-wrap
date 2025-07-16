@@ -1,3 +1,9 @@
 [submodule "src/macros"]
 	path = src/macros
 	url = git@github.com:dingjingmaster/macros.git
+[submodule "tika"]
+	path = tika
+	url = git@github.com:dingjingmaster/tika.git
+[submodule "macros"]
+	path = macros
+	url = git@github.com:dingjingmaster/macros.git
