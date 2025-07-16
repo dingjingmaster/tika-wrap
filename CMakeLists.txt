@@ -63,5 +63,6 @@ add_library(tika-wrap SHARED ${TIKA_WRAP_SRC})
 target_include_directories(tika-wrap PUBLIC ${QT5_INCLUDE_DIRS} ${JAVA_HOME}/include ${JAVA_HOME}/include/linux)
 target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
 target_compile_options(tika-wrap PUBLIC -fPIC)
+target_link_options(tika-wrap PUBLIC -Wl,-rpath,/usr/local/andsec/lib:/usr/local/andsec/lib/java/lib:/usr/local/andsec/lib/java/lib/server:/opt/dev/qt-5.15.15/lib)
 
 add_subdirectory(example)
