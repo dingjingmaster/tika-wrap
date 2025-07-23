@@ -10,8 +10,18 @@
 #include <QDebug>
 #include <QFileInfo>
 
+#include <wait.h>
+#include <setjmp.h>
+#include <unistd.h>
+
 #include "macros/macros.h"
 
+static sigjmp_buf gsJumpBuffer;
+
+extern "C" void sigsegv_handler(int sig)
+{
+    siglongjmp(gsJumpBuffer, 1);
+}
 
 class JavaEnvPrivate
 {
@@ -151,14 +161,23 @@ bool JavaEnvPrivate::autoParserParserFile(const QString & filePath, const QStrin
         return false;
     }
 
-    jstring jFilePath = mJvmEnv->NewStringUTF(filePath.toUtf8().constData());
-    jstring jTmpDir = mJvmEnv->NewStringUTF(tmpDir.toUtf8().constData());
-
-    const bool ret = JNI_TRUE == mJvmEnv->CallBooleanMethod(mAutoParserObj, mAutoParserParserFileMethod, jFilePath, jTmpDir);
-
-    mJvmEnv->ExceptionCheck();
-    mJvmEnv->ExceptionDescribe();
-    mJvmEnv->ExceptionClear();
+    bool ret = false;
+    qInfo() << "Start autoParserParserFile";
+    // const sighandler_t oldSegv = signal(SIGSEGV, sigsegv_handler);
+    // if (sigsetjmp(gsJumpBuffer, 1) == 0) {
+    try {
+        jstring jFilePath = mJvmEnv->NewStringUTF(filePath.toUtf8().constData());
+        jstring jTmpDir = mJvmEnv->NewStringUTF(tmpDir.toUtf8().constData());
+        ret = (JNI_TRUE == mJvmEnv->CallBooleanMethod(mAutoParserObj, mAutoParserParserFileMethod, jFilePath, jTmpDir));
+        mJvmEnv->ExceptionCheck();
+        mJvmEnv->ExceptionDescribe();
+        mJvmEnv->ExceptionClear();
+    }
+    catch (const std::exception& ex) {
+        qWarning() << "error autoParserParserFile: " << ex.what();
+    }
+    // signal(SIGSEGV, oldSegv);
+    qInfo() << "Finish autoParserParserFile";
 
     return ret;
 }
