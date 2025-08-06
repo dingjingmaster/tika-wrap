@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(tika-wrap LANGUAGES C CXX)
 
 set(DEBUG ON)
@@ -13,6 +13,8 @@ set(PROJECT_VERSION_PATCH 0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(USE_TIKA_SERVER true)
 
 if (EXISTS "/usr/lib/jvm/java-11-openjdk-amd64")
     set(JAVA_HOME "/usr/lib/jvm/java-11-openjdk-amd64")
@@ -33,9 +35,13 @@ add_definitions(
 
 find_package (PkgConfig)
 find_package(Qt5LinguistTools REQUIRED)
-find_package(Qt5 COMPONENTS Core REQUIRED)
-
-pkg_check_modules(QT5 REQUIRED Qt5Core)
+if (USE_TIKA_SERVER)
+    find_package(Qt5 COMPONENTS Core Network REQUIRED)
+    pkg_check_modules(QT5 REQUIRED Qt5Core Qt5Network)
+else ()
+    find_package(Qt5 COMPONENTS Core REQUIRED)
+    pkg_check_modules(QT5 REQUIRED Qt5Core)
+endif (USE_TIKA_SERVER)
 
 cmake_host_system_information(RESULT OS QUERY OS_NAME)
 cmake_host_system_information(RESULT RELEASE QUERY OS_RELEASE)
@@ -61,7 +67,12 @@ file(GLOB TIKA_WRAP_SRC
 
 add_library(tika-wrap SHARED ${TIKA_WRAP_SRC})
 target_include_directories(tika-wrap PUBLIC ${QT5_INCLUDE_DIRS} ${JAVA_HOME}/include ${JAVA_HOME}/include/linux)
-target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
+if (USE_TIKA_SERVER)
+    target_compile_definitions(tika-wrap PUBLIC -D USE_TIKA_SERVER)
+    target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES})
+else ()
+    target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
+endif (USE_TIKA_SERVER)
 target_compile_options(tika-wrap PUBLIC -fPIC)
 target_link_options(tika-wrap PUBLIC -Wl,-rpath,/usr/local/andsec/lib:/usr/local/andsec/lib/java/lib:/usr/local/andsec/lib/java/lib/server:/opt/dev/qt-5.15.15/lib)
 

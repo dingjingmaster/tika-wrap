@@ -1,12 +1,13 @@
 .PHONY:all tika tika_wrap demo clean
-all = demo tika tika_wrap
+#all = demo tika tika_wrap
+all = demo tika_wrap
 
 all:$(all)
 	@echo 'done!'
 
 clean:
 	@echo 'cleaning ...'
-	@mvn clean
+	#@mvn clean
 	@rm -rf $(shell pwd)/tmp-dir
 	@echo 'clean done!'
 

@@ -4,24 +4,43 @@
 
 #include "java-env.h"
 
+#include <QMimeType>
+#include <QMimeDatabase>
+#ifdef USE_TIKA_SERVER
+#include <QTimer>
+#include <QProcess>
+#include <QEventLoop>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QNetworkReply>
+#include <QHttpMultiPart>
+#include <QProcessEnvironment>
+#include <QNetworkAccessManager>
+#else
 #include <jni.h>
+#include <setjmp.h>
+#endif
 #include <QFile>
 #include <QMutex>
 #include <QDebug>
+#include <QDir>
+#include <qeventloop.h>
 #include <QFileInfo>
+#include <QNetworkAccessManager>
 
 #include <wait.h>
-#include <setjmp.h>
 #include <unistd.h>
 
 #include "macros/macros.h"
 
+#ifndef USE_TIKA_SERVER
 static sigjmp_buf gsJumpBuffer;
 
 extern "C" void sigsegv_handler(int sig)
 {
     siglongjmp(gsJumpBuffer, 1);
 }
+#endif
 
 class JavaEnvPrivate
 {
@@ -30,13 +49,21 @@ public:
     bool initJvm();
     void closeJvm();
 
-    bool autoParserParserFile(const QString &filePath, const QString& tmpDir) const;
+    bool autoParserParserFile(const QString &filePath, const QString& tmpDir);
 
     ~JavaEnvPrivate();
     explicit JavaEnvPrivate(JavaEnv* q);
 
 private:
     QMutex                  mJvmLocker;
+#ifdef USE_TIKA_SERVER
+    QProcess*               mProcess;
+
+    void launchTikaServer ();
+    std::atomic_bool        mAlreadyRunning;
+    QString                 mTikaServer = "/usr/local/andsec/lib/tika-server.jar";
+    qint32                  mTikaServerPort = 9999;
+#else
     JavaVM*                 mJvm = nullptr;
     JNIEnv*                 mJvmEnv = nullptr;
 
@@ -46,6 +73,7 @@ private:
     jobject                 mAutoParserObj = nullptr;
     jclass                  mAutoParserClass = nullptr;
     jmethodID               mAutoParserParserFileMethod = nullptr;
+#endif
 
     JavaEnv*                q_ptr = nullptr;
 };
@@ -53,15 +81,20 @@ private:
 bool JavaEnvPrivate::initJvm()
 {
     QMutexLocker locker(&mJvmLocker);
-    // C_RETURN_VAL_IF_FAIL(mJvm && mJvmEnv, true);
+#ifdef USE_TIKA_SERVER
+    launchTikaServer();
 
+#else
     JavaVMInitArgs jvmArgs = {};
-    JavaVMOption   jvmOptions[4] = {};
+    JavaVMOption   jvmOptions[7] = {};
 
     jvmOptions[0].optionString = const_cast<char*>("-Djava.class.path=.:" INSTALL_PATH "/lib/tika-main-1.0.0.jar");
     jvmOptions[1].optionString = const_cast<char*>("-Xms1G");
     jvmOptions[2].optionString = const_cast<char*>("-Xmx1G");
     jvmOptions[3].optionString = const_cast<char*>("-XX:PermSize=2G");
+    jvmOptions[5].optionString = const_cast<char*>("-XX:+UseAltStack");
+    jvmOptions[6].optionString = const_cast<char*>("-XX:+PrintGCDetails");
+    jvmOptions[4].optionString = const_cast<char*>("-XX:+ShowMessageBoxOnError");
     jvmArgs.version = JNI_VERSION_1_8;
     jvmArgs.nOptions = 1;
     jvmArgs.options = jvmOptions;
@@ -127,6 +160,7 @@ bool JavaEnvPrivate::initJvm()
             return false;
         }
     }
+#endif
 
     return true;
 }
@@ -134,6 +168,14 @@ bool JavaEnvPrivate::initJvm()
 void JavaEnvPrivate::closeJvm()
 {
     QMutexLocker locker(&mJvmLocker);
+#ifdef USE_TIKA_SERVER
+    if (mProcess) {
+        mProcess->kill();
+        mProcess->waitForFinished();
+        mProcess->deleteLater();
+        mProcess = nullptr;
+    }
+#else
     if (mJvm) {
         mJvm->DestroyJavaVM();
         mJvm = nullptr;
@@ -144,12 +186,147 @@ void JavaEnvPrivate::closeJvm()
         mAutoParserObj = nullptr;
         mAutoParserClass = nullptr;
     }
+#endif
 }
 
-bool JavaEnvPrivate::autoParserParserFile(const QString & filePath, const QString& tmpDir) const
+bool JavaEnvPrivate::autoParserParserFile(const QString& filePath, const QString& tmpDir)
 {
     const QFileInfo tFi(tmpDir);
     C_RETURN_VAL_IF_FAIL(QFile::exists(filePath) && tFi.exists() && tFi.isDir(), false);
+
+#ifdef USE_TIKA_SERVER
+    if (!mAlreadyRunning) {
+        initJvm();
+        if (!mAlreadyRunning) {
+            qWarning() << "Tika Server Not Running!";
+            return false;
+        }
+    }
+
+    const QDir dir(tmpDir);
+    if (!dir.exists()) {
+        if (!dir.mkpath(tmpDir)) {
+            qWarning() << "Failed to create directory '" << tmpDir << "'!";
+            return false;
+        }
+    }
+
+    auto downloadData = [this] (const QString& localFile, const QString& uri, const QString& saveFile, bool isMeta = false) ->bool {
+        QNetworkRequest request;
+        QNetworkAccessManager http;
+        QFileInfo fileInfo(localFile);
+        http.setStrictTransportSecurityEnabled(false);
+
+        QFile file (saveFile);
+        if (!file.open(QFile::ReadWrite | QFile::Text)) {
+            file.close();
+            return false;
+        }
+
+        qInfo() << "file: " << localFile << ", uri: " << uri << ", saveFile: " << saveFile;
+        QEventLoop loop;
+        QTimer timer;
+
+        timer.singleShot(1000 * 600 * 10, &loop, &QEventLoop::quit);
+
+        auto getMimeType = [] (const QString& path) -> QString {
+            const QMimeDatabase db;
+            const QMimeType mimeType = db.mimeTypeForFile(path);
+            const QString name = mimeType.name();
+            if (nullptr == name || name.isEmpty()) {
+                return "text/plain";
+            }
+            else if (name.startsWith("text/")) {
+                return "text/plain";
+            }
+
+            return name;
+        };
+
+        request.setUrl(uri);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, getMimeType(localFile));
+        request.setRawHeader("Host", QString("127.0.0.1:%1").arg(mTikaServerPort).toUtf8().data());
+        request.setRawHeader("Accept", isMeta ? "application/json" : "text/plain; charset=UTF-8");
+
+        QFile localF(localFile);
+        if (!localF.open(QFile::ReadOnly)) {
+            localF.close();
+            file.close();
+            return false;
+        }
+
+#if 0
+        qInfo() << "header:";
+        for (auto& h : request.rawHeaderList()) {
+            qInfo() << h << ":"<< request.rawHeader(h);
+        }
+#endif
+
+        QNetworkReply* reply = http.put(request, &localF);
+
+        http.connect(reply, &QIODevice::readyRead, [&]() {
+            const QByteArray data = reply->read(81920);
+            file.write(data.constData(), data.length());
+        });
+
+        http.connect(reply, &QNetworkReply::finished, [&] () -> void {
+            if (QNetworkReply::NoError == reply->error()) {
+                file.flush();
+                file.close();
+            }
+            else {
+                qWarning() << "post error: " << reply->errorString() << ", code: " << reply->error();
+            }
+            loop.exit(0);
+        });
+
+        timer.start();
+        loop.exec();
+
+        file.close();
+        localF.close();
+
+        if (isMeta) {
+            QFile metaFile(saveFile);
+            if (metaFile.open(QFile::ReadWrite | QFile::Text)) {
+                const QString bytes = metaFile.readAll();
+                const QJsonDocument json = QJsonDocument::fromJson(bytes.toUtf8());
+                metaFile.reset();
+                if (json.isObject()) {
+                    auto obj = json.object();
+                    auto keys = obj.keys();
+                    for (auto& k : keys) {
+                        metaFile.write(QString("%1{]%2\n").arg(k).arg(obj[k].toString()).toUtf8());
+                    }
+                }
+                metaFile.close();
+            }
+        }
+
+        return true;
+    };
+
+    const QString ctxFile = QString("%1/ctx.txt").arg(tmpDir);
+    const QString metaFile = QString("%1/meta.txt").arg(tmpDir);
+
+    const QString ctxUrl = QString("http://127.0.0.1:%1/tika").arg(mTikaServerPort);
+    const QString metaUrl = QString("http://127.0.0.1:%1/meta").arg(mTikaServerPort);
+
+    if (!downloadData(filePath, metaUrl, metaFile, true)) {
+        qWarning() << "Failed to parse file '" << filePath << "' meta info!";
+        return false;
+    }
+
+    if (!downloadData(filePath, ctxUrl, ctxFile)) {
+        qWarning() << "Failed to parse file '" << filePath << "' content!";
+        return false;
+    }
+
+    return true;
+
+
+#else
+    bool ret = false;
 
     if (!mJvm) {
         qWarning() << "JVM not initialized 1!";
@@ -161,7 +338,6 @@ bool JavaEnvPrivate::autoParserParserFile(const QString & filePath, const QStrin
         return false;
     }
 
-    bool ret = false;
     qInfo() << "Start autoParserParserFile";
     // const sighandler_t oldSegv = signal(SIGSEGV, sigsegv_handler);
     // if (sigsetjmp(gsJumpBuffer, 1) == 0) {
@@ -180,6 +356,7 @@ bool JavaEnvPrivate::autoParserParserFile(const QString & filePath, const QStrin
     qInfo() << "Finish autoParserParserFile";
 
     return ret;
+#endif
 }
 
 JavaEnvPrivate::~JavaEnvPrivate()
@@ -190,6 +367,48 @@ JavaEnvPrivate::~JavaEnvPrivate()
 JavaEnvPrivate::JavaEnvPrivate(JavaEnv * q)
     : q_ptr(q)
 {
+}
+
+// 已经上锁
+void JavaEnvPrivate::launchTikaServer()
+{
+    Q_Q(JavaEnv);
+
+    if (mProcess) {
+        if (QProcess::NotRunning == mProcess->state()) {
+            mAlreadyRunning = false;
+            mProcess->deleteLater();
+            mProcess = nullptr;
+        }
+    }
+
+    if (!mProcess) {
+        mProcess = new QProcess();
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+
+        env.insert("LD_PRELOAD", "");
+        env.insert("PATH", "/usr/local/andsec/scan/bin:" + env.value("PATH"));
+        mProcess->setProcessEnvironment(env);
+        mProcess->setProgram("java");
+        mProcess->setStandardErrorFile(QProcess::nullDevice());
+        mProcess->setStandardOutputFile(QProcess::nullDevice());
+        mProcess->setArguments(QStringList() << "-jar" << mTikaServer << "--port" << QString("%1").arg(mTikaServerPort));
+        QProcess::connect(mProcess, &QProcess::stateChanged, q_ptr, [&] (QProcess::ProcessState state) {
+            switch (state) {
+            default:
+            case QProcess::NotRunning:
+            case QProcess::Starting:
+                mAlreadyRunning = false;
+                break;
+            case QProcess::Running:
+                mAlreadyRunning = true;
+                break;
+            }
+        });
+        mProcess->start();
+        mProcess->waitForStarted();
+        sleep(6);
+    }
 }
 
 JavaEnv JavaEnv::gInstance;
@@ -203,22 +422,28 @@ bool JavaEnv::parseFile(const QString & absFilePath, const QString& tmpDir)
 {
     Q_D(JavaEnv);
 
+#ifdef USE_TIKA_SERVER
+    const bool ret = d->autoParserParserFile(absFilePath, tmpDir);
+#else
     d->mJvm->AttachCurrentThread(reinterpret_cast<void**>(&(d->mJvmEnv)), nullptr);
     const bool ret = d->autoParserParserFile(absFilePath, tmpDir);
     d->mJvm->DetachCurrentThread();
+#endif
 
     return ret;
 }
 
-JavaEnv::JavaEnv()
-    : QObject(nullptr), d_ptr(new JavaEnvPrivate(this))
+JavaEnv::JavaEnv() : QObject(nullptr), d_ptr(new JavaEnvPrivate(this))
 {
     Q_D(JavaEnv);
 
+#ifdef USE_TIKA_SERVER
+#else
     if (!d->initJvm()) {
         qWarning() << "JavaEnv init failed!";
         d->closeJvm();
     }
+#endif
 }
 
 JavaEnv::JavaEnv(const JavaEnv &)
