@@ -74,6 +74,6 @@ else ()
     target_link_libraries(tika-wrap PUBLIC ${QT5_LIBRARIES} -L${JAVA_HOME}/lib/server -ljvm)
 endif (USE_TIKA_SERVER)
 target_compile_options(tika-wrap PUBLIC -fPIC)
-target_link_options(tika-wrap PUBLIC -Wl,-rpath,/usr/local/andsec/lib:/usr/local/andsec/lib/java/lib:/usr/local/andsec/lib/java/lib/server:/opt/dev/qt-5.15.15/lib)
+target_link_options(tika-wrap PUBLIC -Wl,-rpath,/usr/local/andsec/lib:/usr/local/andsec/scan/lib/java/lib:/usr/local/andsec/scan/lib/java/lib/server:/opt/dev/qt-5.15.15/lib)
 
 add_subdirectory(example)

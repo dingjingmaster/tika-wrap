@@ -26,6 +26,7 @@ int main (int argc, char* argv[])
             file.close();
         }
 
+        qInfo() << "meta:\n";
         QFile fileM(QString("%1/meta.txt").arg(tmpDir));
         if (fileM.open(QIODevice::ReadOnly)) {
             auto lines = QString(fileM.readAll()).split("\n");

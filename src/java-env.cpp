@@ -236,15 +236,15 @@ bool JavaEnvPrivate::autoParserParserFile(const QString& filePath, const QString
             if (nullptr == name || name.isEmpty()) {
                 return "text/plain";
             }
-            else if (name.startsWith("text/")) {
-                return "text/plain";
-            }
 
-            return name;
+            return "";
         };
 
         request.setUrl(uri);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, getMimeType(localFile));
+        const auto metaType = getMimeType(localFile);
+        if (!metaType.isEmpty()) {
+            request.setHeader(QNetworkRequest::ContentTypeHeader, getMimeType(localFile));
+        }
         request.setRawHeader("Host", QString("127.0.0.1:%1").arg(mTikaServerPort).toUtf8().data());
         request.setRawHeader("Accept", isMeta ? "application/json" : "text/plain; charset=UTF-8");
 
@@ -387,13 +387,21 @@ void JavaEnvPrivate::launchTikaServer()
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
         env.insert("LD_PRELOAD", "");
-        env.insert("LD_LIBRARY_PATH", "/usr/local/andsec/scan/lib");
+        env.insert("LD_LIBRARY_PATH", "/usr/local/andsec/scan/lib"
+                                      ":/usr/local/andsec/scan/lib/java/lib"
+                                      ":/usr/local/andsec/scan/lib/java/lib/jli"
+                                      ":/usr/local/andsec/scan/lib/java/lib/server");
         env.insert("PATH", "/usr/local/andsec/scan/bin:" + env.value("PATH"));
         mProcess->setProcessEnvironment(env);
-        mProcess->setProgram("java");
-        mProcess->setStandardErrorFile(QProcess::nullDevice());
-        mProcess->setStandardOutputFile(QProcess::nullDevice());
+        mProcess->setProgram("/usr/local/andsec/scan/bin/java");
         mProcess->setArguments(QStringList() << "-jar" << mTikaServer << "--port" << QString("%1").arg(mTikaServerPort));
+
+#if 1
+        qInfo() << "Start TikaServer: " << mProcess->program();
+        qInfo() << "PATH: " << env.value("PATH");
+        qInfo() << "LD_LIBRARY_PATH: " << env.value("LD_LIBRARY_PATH");
+#endif
+
         QProcess::connect(mProcess, &QProcess::stateChanged, q_ptr, [&] (QProcess::ProcessState state) {
             switch (state) {
             default:
@@ -406,9 +414,40 @@ void JavaEnvPrivate::launchTikaServer()
                 break;
             }
         });
+
+        QTimer timer;
+        QEventLoop loop;
+#if 1
+        QProcess::connect(mProcess, &QProcess::readyReadStandardOutput, [&] () {
+            const QString info = mProcess->readAllStandardOutput();
+            if (info.contains("http://") && info.contains(QString("%1").arg(mTikaServerPort))) {
+                qInfo() << "TIKA Started!";
+                loop.exit();
+            }
+            qInfo() << info;
+        });
+        QProcess::connect(mProcess, &QProcess::readyReadStandardError, [&] () {
+            const QString info = mProcess->readAllStandardError();
+            if (info.contains("http://") && info.contains(QString("%1").arg(mTikaServerPort))) {
+                qInfo() << "TIKA Started!";
+                loop.exit();
+            }
+            qWarning() << info;
+        });
+#else
+        mProcess->setStandardErrorFile(QProcess::nullDevice());
+        mProcess->setStandardOutputFile(QProcess::nullDevice());
+#endif
+
         mProcess->start();
         mProcess->waitForStarted();
-        sleep(6);
+
+        timer.setSingleShot(true);
+        timer.connect(&timer, &QTimer::timeout, [&] () {
+            loop.exit();
+        });
+        timer.start(1000 * 300);
+        loop.exec();
     }
 }
 
