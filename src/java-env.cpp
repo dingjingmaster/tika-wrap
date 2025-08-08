@@ -458,11 +458,18 @@ void JavaEnvPrivate::launchTikaServer()
     }
 }
 
-JavaEnv JavaEnv::gInstance;
+JavaEnv* JavaEnv::gInstance = nullptr;
 
 JavaEnv* JavaEnv::getInstance()
 {
-    return &JavaEnv::gInstance;
+    if (!gInstance) {
+        static QMutex lock;
+        QMutexLocker locker(&lock);
+        if (!gInstance) {
+            gInstance = new JavaEnv();
+        }
+    }
+    return gInstance;
 }
 
 bool JavaEnv::parseFile(const QString & absFilePath, const QString& tmpDir)

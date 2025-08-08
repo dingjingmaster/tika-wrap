@@ -22,7 +22,7 @@ private:
     JavaEnv* operator=(const JavaEnv&) const;
 
 private:
-    static JavaEnv              gInstance;
+    static JavaEnv*             gInstance;
     JavaEnvPrivate*             d_ptr = nullptr;
 };
 
