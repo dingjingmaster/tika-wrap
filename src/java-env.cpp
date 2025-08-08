@@ -57,10 +57,10 @@ public:
 private:
     QMutex                  mJvmLocker;
 #ifdef USE_TIKA_SERVER
-    QProcess*               mProcess;
+    QProcess*               mProcess{};
 
     void launchTikaServer ();
-    std::atomic_bool        mAlreadyRunning;
+    std::atomic_bool        mAlreadyRunning{};
     QString                 mTikaServer = "/usr/local/andsec/scan/lib/tika-server.jar";
     qint32                  mTikaServerPort = 9999;
 #else
@@ -195,6 +195,7 @@ bool JavaEnvPrivate::autoParserParserFile(const QString& filePath, const QString
     C_RETURN_VAL_IF_FAIL(QFile::exists(filePath) && tFi.exists() && tFi.isDir(), false);
 
 #ifdef USE_TIKA_SERVER
+    qInfo() << "[TIKA] autoParserParserFile: " << filePath;
     if (!mAlreadyRunning) {
         initJvm();
         if (!mAlreadyRunning) {
@@ -326,6 +327,8 @@ bool JavaEnvPrivate::autoParserParserFile(const QString& filePath, const QString
 
 
 #else
+    qInfo() << "[JNI] autoParserParserFile: " << filePath;
+
     bool ret = false;
 
     if (!mJvm) {
@@ -367,6 +370,8 @@ JavaEnvPrivate::~JavaEnvPrivate()
 JavaEnvPrivate::JavaEnvPrivate(JavaEnv * q)
     : q_ptr(q)
 {
+    mAlreadyRunning = false;
+    initJvm();
 }
 
 // 已经上锁
@@ -386,11 +391,13 @@ void JavaEnvPrivate::launchTikaServer()
         mProcess = new QProcess();
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
-        env.insert("LD_PRELOAD", "");
-        env.insert("LD_LIBRARY_PATH", "/usr/local/andsec/scan/lib"
+        const QString ldLibraryPath = "/usr/local/andsec/scan/lib"
                                       ":/usr/local/andsec/scan/lib/java/lib"
                                       ":/usr/local/andsec/scan/lib/java/lib/jli"
-                                      ":/usr/local/andsec/scan/lib/java/lib/server");
+                                      ":/usr/local/andsec/scan/lib/java/lib/server";
+
+        env.insert("LD_PRELOAD", "");
+        env.insert("LD_LIBRARY_PATH", ldLibraryPath);
         env.insert("PATH", "/usr/local/andsec/scan/bin:" + env.value("PATH"));
         mProcess->setProcessEnvironment(env);
         mProcess->setProgram("/usr/local/andsec/scan/bin/java");
