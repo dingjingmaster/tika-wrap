@@ -61,7 +61,7 @@ private:
 
     void launchTikaServer ();
     std::atomic_bool        mAlreadyRunning;
-    QString                 mTikaServer = "/usr/local/andsec/lib/tika-server.jar";
+    QString                 mTikaServer = "/usr/local/andsec/scan/lib/tika-server.jar";
     qint32                  mTikaServerPort = 9999;
 #else
     JavaVM*                 mJvm = nullptr;
@@ -387,6 +387,7 @@ void JavaEnvPrivate::launchTikaServer()
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
         env.insert("LD_PRELOAD", "");
+        env.insert("LD_LIBRARY_PATH", "/usr/local/andsec/scan/lib");
         env.insert("PATH", "/usr/local/andsec/scan/bin:" + env.value("PATH"));
         mProcess->setProcessEnvironment(env);
         mProcess->setProgram("java");
